@@ -1,6 +1,7 @@
 import config
 import csv
 import datetime
+import filters
 import requests
 import xml.etree.ElementTree as ET
 from song_datum import SongDatum
@@ -50,8 +51,17 @@ def generate_csv(song_data):
 
         for song in song_data:
             # Prevent commas from getting into the CSV
-            song.title = song.title.replace(',', '')
-            song.artist = song.artist.replace(',', '')
+            song.title = song.title.replace(',', '').upper()
+            song.artist = song.artist.replace(',', '').upper()
+
+            # Some artist fields are a little too much for Spotify,
+            # so splice out superfluous text using keywords that are
+            # common culprits for bad results
+            matched_keyword = next((x for x in filters.artists if x in song.artist), False)
+
+            if matched_keyword != False:
+                idx = song.artist.find(matched_keyword)
+                song.artist = song.artist[0:idx-1]
 
             # Write the row to file
             filewriter.writerow([song.title, song.artist])

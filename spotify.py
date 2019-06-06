@@ -1,12 +1,13 @@
-import csv
-import glob
-import os
-import sys
 import config
-from song_datum import SongDatum
+import csv
+import filters
+import glob
 import json
+import os
 import spotipy
 import spotipy.util as util
+import sys
+from song_datum import SongDatum
 
 track_ids = []      # The tracks currently in the playlist
 song_data = []      # The SongDatum objects from the CSVs
@@ -74,7 +75,7 @@ def search_tracks(sp):
         if len(items) > 0:
             track_id = items[0]["id"]
             name = items[0]["name"]
-            if track_id not in search_ids and "karaoke" not in name.lower():
+            if track_id not in search_ids and any(x in filters.tracks for x in name.lower()) == False:
                 search_ids.append(track_id)
 
 '''
