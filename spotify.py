@@ -73,10 +73,35 @@ def search_tracks(sp):
         res = sp.search(q=song.title + " " + song.artist, limit=1)
         items = res["tracks"]["items"]
         if len(items) > 0:
-            track_id = items[0]["id"]
-            name = items[0]["name"]
-            if track_id not in search_ids and any(x in filters.tracks for x in name.lower()) == False:
-                search_ids.append(track_id)
+            index = 0
+
+            # Get the first track without any of the filter keywords in either the track name or the artists field
+            # Try the first five results or until the list of results is exhausted, whichever is less
+            while (index < 5 and index < len(items)):
+                # If we already have the track, don't bother iterating over the list
+                track_id = items[index]["id"]
+
+                if track_id in search_ids:
+                    break
+
+                bad_record = False
+                name = items[index]["name"]
+                artists = items[index]["artists"]
+
+                # `artists` is an array so make sure none of them have a filter word
+                for artist in artists:
+                    artist_name = artist["name"]
+                    if any(x in name.lower() for x in filters.tracks) == True or any(x in artist_name.lower() for x in filters.tracks) == True:
+                        bad_record = True
+                        break
+
+                # If the track name or any artists contain the filtered name, move on
+                # Otherwise, add the track and break
+                if bad_record == False:
+                    search_ids.append(track_id)
+                    break
+                else:
+                    index += 1
 
 '''
 Adds the searched tracks to the user's playlist.
